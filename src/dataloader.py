@@ -132,7 +132,8 @@ def config_to_arrays(dataset_config):
         del config['coeff_schedule_param']
 
     # Get all attributes
-    for (name, value) in config.iteritems():
+    #for (name, value) in config.iteritems():
+    for (name, value) in config.items():
         if name == 'coeff_schedule_param':
             output['coeff_schedule'] = [value['half_life'],
                                         value['initial_coeff'],
@@ -221,6 +222,7 @@ def _generate_coeff(param, discount_coeff=tf.constant(1.0), default_value=tf.con
 
 
 def load_batch(dataset_config, split_name, global_step):
+    print("dataset_config=", dataset_config['PREPROCESS']['image_a'])
     num_threads = 32
     reader_kwargs = {'options': tf.python_io.TFRecordOptions(
         tf.python_io.TFRecordCompressionType.ZLIB)}
@@ -243,6 +245,7 @@ def load_batch(dataset_config, split_name, global_step):
         crop = [dataset_config['PREPROCESS']['crop_height'],
                 dataset_config['PREPROCESS']['crop_width']]
         config_a = config_to_arrays(dataset_config['PREPROCESS']['image_a'])
+        print("config_a=",config_a,"*"*100)
         config_b = config_to_arrays(dataset_config['PREPROCESS']['image_b'])
 
         image_as, image_bs, flows = map(lambda x: tf.expand_dims(x, 0), [image_a, image_b, flow])
