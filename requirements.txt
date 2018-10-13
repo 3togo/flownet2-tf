@@ -1,0 +1,5 @@
+pypng
+matplotlib
+image
+scipy
+tensorflow-gpu

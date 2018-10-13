@@ -1,19 +1,20 @@
 # Makefile
 
 TF_INC = `python -c "import tensorflow; print(tensorflow.sysconfig.get_include())"`
-
+TF_LIB=`python -c 'import tensorflow as tf; print(tf.sysconfig.get_lib())'`
+TF_LINK=`python -c 'import tensorflow as tf; print(tf.sysconfig.get_link_flags())'`
 ifndef CUDA_HOME
     CUDA_HOME := /usr/local/cuda
 endif
 
-CC        = gcc -O2 -pthread
-CXX       = g++
-GPUCC     = nvcc
-CFLAGS    = -std=c++11 -I$(TF_INC) -I"$(CUDA_HOME)/include" -DGOOGLE_CUDA=1
+CC        = gcc-6 -O2 -pthread
+CXX       = g++-6
+GPUCC     = nvcc -expt-relaxed-constexpr -DNDEBUG
+CFLAGS    = -std=c++11 -I$(TF_INC) -I"$(CUDA_HOME)/include" -I$(CUDA_HOME)/../ -DGOOGLE_CUDA=1 -I$TF_INC/external/nsync/public -L$TF_LIB
 GPUCFLAGS = -c
-LFLAGS    = -pthread -shared -fPIC
-GPULFLAGS = -x cu -Xcompiler -fPIC
-CGPUFLAGS = -L$(CUDA_HOME)/lib -L$(CUDA_HOME)/lib64 -lcudart
+LFLAGS    = -pthread -shared -fPIC -L$TF_LINK
+GPULFLAGS = -x cu -Xcompiler -fPIC --expt-relaxed-constexpr
+CGPUFLAGS = -L$(CUDA_HOME)/lib -L$(CUDA_HOME)/lib64 -lcudart -L$(TF_LIB) -ltensorflow_framework
 
 OUT_DIR   = src/ops/build
 PREPROCESSING_SRC = "src/ops/preprocessing/preprocessing.cc" "src/ops/preprocessing/kernels/flow_augmentation.cc" "src/ops/preprocessing/kernels/augmentation_base.cc" "src/ops/preprocessing/kernels/data_augmentation.cc"
@@ -54,6 +55,7 @@ ifeq ($(detected_OS),Darwin)  # Mac OS X
 endif
 ifeq ($(detected_OS),Linux)
 	CFLAGS += -D_MWAITXINTRIN_H_INCLUDED -D_FORCE_INLINES -D__STRICT_ANSI__ -D_GLIBCXX_USE_CXX11_ABI=0
+	#CFLAGS += -D_MWAITXINTRIN_H_INCLUDED -D_FORCE_INLINES -D__STRICT_ANSI__ -D_GLIBCXX_USE_CXX11_ABI=1
 endif
 
 all: preprocessing downsample correlation flowwarp
